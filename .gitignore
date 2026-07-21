@@ -3,4 +3,5 @@ __pycache__/
 *.pyc
 dataset/
 *.h5
+!model_animals10_vgg16_final.h5
 .env
