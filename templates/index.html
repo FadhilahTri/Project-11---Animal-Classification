@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Katalog Spesies — Klasifikasi Hewan VGG16</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#152018;
+    --forest:#1e2f22;
+    --forest-2:#28402f;
+    --parchment:#ece4cd;
+    --parchment-2:#e2d8b9;
+    --line:#c9bd94;
+    --ochre:#b3812a;
+    --ochre-dark:#8c631d;
+    --rust:#a8461f;
+    --muted:#6b6350;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #2c4531 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, #23361f 0%, transparent 55%),
+      var(--ink);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    padding:56px 20px 80px;
+  }
+
+  .wrap{max-width:640px; margin:0 auto;}
+
+  /* ---------- Header ---------- */
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#a9c9a4;
+    text-align:center;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{content:"— ";}
+  .eyebrow::after{content:" —";}
+
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(30px, 5vw, 44px);
+    color:#f3ecd8;
+    text-align:center;
+    margin:0 0 8px;
+    letter-spacing:-.01em;
+  }
+  h1 em{
+    font-style:italic;
+    font-weight:500;
+    color:var(--ochre);
+  }
+  .subhead{
+    text-align:center;
+    color:#b9c4b3;
+    font-size:14.5px;
+    max-width:420px;
+    margin:0 auto 44px;
+    line-height:1.55;
+  }
+
+  /* ---------- Card ---------- */
+  .card{
+    background:var(--parchment);
+    border:1px solid var(--line);
+    border-radius:6px;
+    box-shadow:0 30px 60px -25px rgba(0,0,0,.55);
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";
+    position:absolute; inset:8px;
+    border:1px solid rgba(21,32,24,.14);
+    border-radius:3px;
+    pointer-events:none;
+  }
+  .card-inner{padding:34px 32px 30px;}
+
+  .card-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ochre-dark);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .card-label .dot{width:6px; height:6px; border-radius:50%; background:var(--ochre-dark);}
+  .card-label .rule{flex:1; height:1px; background:var(--line);}
+
+  /* ---------- Upload zone ---------- */
+  .dropzone{
+    border:1.5px dashed #a89a68;
+    border-radius:4px;
+    padding:26px 20px;
+    text-align:center;
+    background:rgba(255,255,255,.28);
+    transition:border-color .15s ease, background .15s ease;
+    cursor:pointer;
+    display:block;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--ochre-dark);
+    background:rgba(255,255,255,.5);
+  }
+  .dropzone svg{width:26px; height:26px; color:var(--ochre-dark); margin-bottom:10px;}
+  .dropzone .primary{font-size:14px; font-weight:500; color:var(--ink);}
+  .dropzone .secondary{font-size:12px; color:var(--muted); margin-top:3px;}
+  .dropzone input{display:none;}
+  .filename{
+    margin-top:12px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--ochre-dark);
+    display:none;
+  }
+
+  .submit-btn{
+    width:100%;
+    margin-top:20px;
+    padding:13px;
+    border:none;
+    border-radius:3px;
+    background:var(--forest);
+    color:#f3ecd8;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .submit-btn:hover{background:var(--forest-2);}
+  .submit-btn:focus-visible, .dropzone:focus-within{
+    outline:2px solid var(--ochre-dark);
+    outline-offset:2px;
+  }
+
+  /* ---------- Result ---------- */
+  .result{
+    margin-top:30px;
+    padding-top:28px;
+    border-top:1px dashed var(--line);
+  }
+
+  .frame-wrap{
+    display:flex;
+    justify-content:center;
+    margin-bottom:22px;
+  }
+  .frame{
+    position:relative;
+    width:200px;
+    height:200px;
+    border-radius:50%;
+    overflow:hidden;
+    background:var(--ink);
+  }
+  .frame img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .frame::after{
+    content:"";
+    position:absolute; inset:0;
+    border-radius:50%;
+    box-shadow:inset 0 0 0 1px rgba(243,236,216,.6), inset 0 0 0 6px rgba(21,32,24,.85);
+  }
+  .bracket{
+    position:absolute;
+    width:16px; height:16px;
+    border:2px solid var(--ochre);
+  }
+  .bracket.tl{top:-9px; left:-9px; border-right:none; border-bottom:none;}
+  .bracket.tr{top:-9px; right:-9px; border-left:none; border-bottom:none;}
+  .bracket.bl{bottom:-9px; left:-9px; border-right:none; border-top:none;}
+  .bracket.br{bottom:-9px; right:-9px; border-left:none; border-top:none;}
+
+  .tag{text-align:center;}
+  .tag-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .tag-name{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:34px;
+    color:var(--ink);
+    margin:0 0 16px;
+  }
+
+  .confidence{
+    max-width:280px;
+    margin:0 auto;
+  }
+  .confidence-row{
+    display:flex;
+    justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .confidence-row span:last-child{color:var(--ochre-dark); font-weight:700;}
+  .meter{
+    height:6px;
+    background:rgba(21,32,24,.12);
+    border-radius:3px;
+    overflow:hidden;
+    padding:1px;
+  }
+  .meter-fill{
+    height:100%;
+    background:var(--ochre);
+    border-radius:2px;
+    transition:width .6s ease;
+  }
+
+  /* ---------- Footer ---------- */
+  .foot{
+    text-align:center;
+    margin-top:34px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.06em;
+    color:#7d8c78;
+  }
+  .foot span{color:#a9c9a4;}
+
+  @media (prefers-reduced-motion: reduce){
+    .meter-fill{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <p class="eyebrow">Field Recognition System</p>
+  <h1>Katalog <em>Spesies</em></h1>
+  <p class="subhead">Unggah satu citra hewan. Jaringan konvolusi VGG16 — dilatih ulang di atas ImageNet — akan mencocokkannya dengan sepuluh spesies dalam katalog ini.</p>
+
+  <div class="card">
+    <div class="card-inner">
+
+      <div class="card-label">
+        <span class="dot"></span> Spesimen Baru <span class="rule"></span>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data" id="uploadForm">
+        <label class="dropzone" id="dropzone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="primary">Letakkan atau pilih citra</div>
+          <div class="secondary">JPG / PNG — satu hewan per bidikan</div>
+          <input type="file" name="file" id="file" accept="image/*" required>
+        </label>
+        <div class="filename" id="filename"></div>
+        <button type="submit" class="submit-btn">Identifikasi Spesimen</button>
+      </form>
+
+      {% if prediction %}
+      <div class="result">
+        <div class="frame-wrap">
+          <div class="frame">
+            <img src="/{{ image_path }}" alt="Citra spesimen">
+            <span class="bracket tl"></span>
+            <span class="bracket tr"></span>
+            <span class="bracket bl"></span>
+            <span class="bracket br"></span>
+          </div>
+        </div>
+
+        <div class="tag">
+          <div class="tag-label">Klasifikasi Teridentifikasi</div>
+          <p class="tag-name">{{ prediction }}</p>
+
+          <div class="confidence">
+            <div class="confidence-row">
+              <span>Tingkat Keyakinan</span>
+              <span>{{ confidence }}%</span>
+            </div>
+            <div class="meter">
+              <div class="meter-fill" style="width:{{ confidence }}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <p class="foot">Dataset <span>Animals-10</span> · Model <span>VGG16 Transfer Learning</span></p>
+</div>
+
+<script>
+  const fileInput = document.getElementById('file');
+  const filenameEl = document.getElementById('filename');
+  const dropzone = document.getElementById('dropzone');
+
+  fileInput.addEventListener('change', () => {
+    if(fileInput.files.length){
+      filenameEl.textContent = '» ' + fileInput.files[0].name;
+      filenameEl.style.display = 'block';
+    }
+  });
+
+  ['dragover','dragleave','drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => {
+      e.preventDefault();
+      dropzone.classList.toggle('drag', evt === 'dragover');
+    });
+  });
+</script>
+
+</body>
+</html>
